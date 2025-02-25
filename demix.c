@@ -70,6 +70,7 @@ die(const char *arg0, const char *extra) {
     "Options " << endl <<
 
     "\t-e fixed_error_rate (use this instead of estimating/Phred score)" << endl <<
+    "\t-x do not truncate estimated error rate to Phred score if below" << endl <<
     "\t-h (prints this message) " << endl <<
     "\t-c countsFile (writes the allele counts to file)" << endl <<
     "\t-b bamFile (input)" << endl <<
@@ -108,6 +109,7 @@ bool
 parseOptions(char **argv, int argc, Options &opt, Locus &loc) {
 	int i = 1;
 	opt.fixed_errorrate=-1.0;
+	opt.trancate_errorrate=true;
 	opt.filter=DEFAULT_READ_FILTER;//(BAM_FUNMAP | BAM_FSECONDARY | BAM_FQCFAIL | BAM_FDUP);
 	opt.include_filter=DEFAULT_READ_INCLUDE_FILTER;
 	opt.outCounts=opt.bedFilename = opt.bamFilename= NULL;
@@ -149,6 +151,8 @@ parseOptions(char **argv, int argc, Options &opt, Locus &loc) {
 	    opt.filterIndelAdjacent=false;
 	  } else if (flag == 'h') {
 	    opt.help=true;
+	  } else if (flag == 'x') {
+	    opt.trancate_errorrate=false;
 	  } else { // option has an argument
 	    ++i;
 	    if (i==argc) {
@@ -714,7 +718,7 @@ nonzeroArgmin(const unsigned *a, unsigned na) {
 
 
 double
-estimateError(const BaseCounter *counts, unsigned nLoci, double altMinError) {
+estimateError(const BaseCounter *counts, unsigned nLoci, double altMinError, bool truncate_errorrate) {
 
   double e;
   unsigned i, nRight, nWrong;
@@ -734,7 +738,7 @@ estimateError(const BaseCounter *counts, unsigned nLoci, double altMinError) {
   // so lets take an expectation (assuming uniform errors)
   e *= 3.0/2;
 
-  if (e < altMinError)
+  if (truncate_errorrate && e < altMinError)
     return altMinError;
   
   return e;
@@ -1089,7 +1093,7 @@ main(int argc, char **argv) {
     if ((opt.fixed_errorrate > 0.0) && (opt.fixed_errorrate < 1.0)) {
       error = opt.fixed_errorrate;
     } else {
-      error = estimateError(results, loci.size(), error);
+      error = estimateError(results, loci.size(), error, opt.trancate_errorrate);
     }
     
     

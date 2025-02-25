@@ -36,6 +36,7 @@ std::string KNOWN_GENOS[] = {
 
 typedef struct {
   double fixed_errorrate;
+  bool trancate_errorrate;
   unsigned minMapQuality;
   unsigned minBaseQuality;
   unsigned maxBaseQuality;

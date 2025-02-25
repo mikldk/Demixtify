@@ -69,7 +69,7 @@ die(const char *arg0, const char *extra) {
     
     "Options " << endl <<
 
-    "\t\t-e fixed_error_rate (don't estimate error rate or used Phred score, take this instead)" << endl <<
+    "\t-e fixed_error_rate (use this instead of estimating/Phred score)" << endl <<
     "\t-h (prints this message) " << endl <<
     "\t-c countsFile (writes the allele counts to file)" << endl <<
     "\t-b bamFile (input)" << endl <<

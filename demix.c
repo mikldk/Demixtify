@@ -69,6 +69,7 @@ die(const char *arg0, const char *extra) {
     
     "Options " << endl <<
 
+    "\t\t-e fixed_error_rate (don't estimate error rate or used Phred score, take this instead)" << endl <<
     "\t-h (prints this message) " << endl <<
     "\t-c countsFile (writes the allele counts to file)" << endl <<
     "\t-b bamFile (input)" << endl <<
@@ -106,6 +107,7 @@ validNuc(char c) {
 bool
 parseOptions(char **argv, int argc, Options &opt, Locus &loc) {
 	int i = 1;
+	opt.fixed_errorrate=-1.0;
 	opt.filter=DEFAULT_READ_FILTER;//(BAM_FUNMAP | BAM_FSECONDARY | BAM_FQCFAIL | BAM_FDUP);
 	opt.include_filter=DEFAULT_READ_INCLUDE_FILTER;
 	opt.outCounts=opt.bedFilename = opt.bamFilename= NULL;
@@ -154,7 +156,9 @@ parseOptions(char **argv, int argc, Options &opt, Locus &loc) {
 	      ++errors;
 	      break;
 	    }	
-	    if (flag == 'q') {
+	    if (flag == 'e') {
+	      opt.fixed_errorrate = atof(argv[i]);
+	    } else if (flag == 'q') {
 	      opt.minBaseQuality = max(atoi(argv[i]), 0); // make this unsigned-friendly
 	    } else if (flag == 'Q') {
 	      opt.maxBaseQuality = max(atoi(argv[i]), 0); // make this unsigned-friendly
@@ -1081,7 +1085,13 @@ main(int argc, char **argv) {
     }
 
     double error = pow(10, opt.maxBaseQuality/-10.0);
-    error = estimateError(results, loci.size(), error);
+    
+    if ((opt.fixed_errorrate > 0.0) && (opt.fixed_errorrate < 1.0)) {
+      error = opt.fixed_errorrate;
+    } else {
+      error = estimateError(results, loci.size(), error);
+    }
+    
     
     double mf_hat = estimateMF_1Thread(results, &loci, &opt, error);
     //    deconvolveSample(    
